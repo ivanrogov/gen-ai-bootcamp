@@ -35,8 +35,9 @@ public class PromptService {
     @Autowired
     private InvocationContext invocationContext;
 
+    private ChatHistory history = new ChatHistory();
+
     public String getChatCompletions(String prompt) {
-        ChatHistory history = new ChatHistory();
         history.addUserMessage(prompt);
         List<ChatMessageContent<?>> results = chatCompletionService
                 .getChatMessageContentsAsync(history, kernel, invocationContext)
@@ -47,7 +48,9 @@ public class PromptService {
             history.addMessage(result);
             output.append(result.getContent());
         }
-        return output.toString();
+        String result = output.toString();
+        log.debug(result);
+        return result;
     }
 
 }
