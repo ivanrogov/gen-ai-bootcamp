@@ -21,24 +21,18 @@ public class SemanticKernelConfiguration {
     public ChatCompletionService chatCompletionService(@Value("${client-azureopenai-deployment-name}") String deploymentOrModelName,
                                                        OpenAIAsyncClient openAIAsyncClient) {
         return OpenAIChatCompletion.builder()
-                .withModelId(deploymentOrModelName)
-                .withOpenAIAsyncClient(openAIAsyncClient)
                 .build();
     }
 
     @Bean
     public Kernel kernel(ChatCompletionService chatCompletionService) {
         return Kernel.builder()
-                .withAIService(ChatCompletionService.class, chatCompletionService)
                 .build();
     }
 
     @Bean
     public InvocationContext invocationContext() {
         return InvocationContext.builder()
-                .withPromptExecutionSettings(PromptExecutionSettings.builder()
-                        .withTemperature(1.0)
-                        .build())
                 .build();
     }
 
