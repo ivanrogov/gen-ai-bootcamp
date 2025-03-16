@@ -9,6 +9,8 @@ import com.microsoft.semantickernel.orchestration.ToolCallBehavior;
 import com.microsoft.semantickernel.plugin.KernelPlugin;
 import com.microsoft.semantickernel.plugin.KernelPluginFactory;
 import com.microsoft.semantickernel.services.chatcompletion.ChatCompletionService;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,35 +19,39 @@ import java.util.Map;
 @Configuration
 public class SemanticKernelConfiguration {
 
+    @Value("${client-azureopenai-deployment-name}")
+    private String deploymentName;
+
+    private Map<String, PromptExecutionSettings> promptExecutionSettingsMap;
+
     @Bean
     public ChatCompletionService chatCompletionService(@Value("${client-azureopenai-deployment-name}") String deploymentOrModelName,
                                                        OpenAIAsyncClient openAIAsyncClient) {
         return OpenAIChatCompletion.builder()
+                .withModelId(deploymentOrModelName)
+                .withOpenAIAsyncClient(openAIAsyncClient)
                 .build();
     }
 
     @Bean
     public Kernel kernel(ChatCompletionService chatCompletionService) {
         return Kernel.builder()
+                .withAIService(ChatCompletionService.class, chatCompletionService)
                 .build();
     }
 
     @Bean
-    public InvocationContext invocationContext() {
+    public InvocationContext invocationContext(PromptExecutionSettings promptExecutionSettings) {
         return InvocationContext.builder()
+                .withPromptExecutionSettings(promptExecutionSettings)
                 .build();
     }
 
-    /**
-     * Creates a map of {@link PromptExecutionSettings} for different models.
-     *
-     * @param deploymentOrModelName the Azure OpenAI deployment or model name
-     * @return a map of model names to {@link PromptExecutionSettings}
-     */
     @Bean
-    public Map<String, PromptExecutionSettings> promptExecutionsSettingsMap(@Value("${client-azureopenai-deployment-name}")
-                                                                            String deploymentOrModelName) {
-        return Map.of(deploymentOrModelName, PromptExecutionSettings.builder()
-                .build());
+    public PromptExecutionSettings promptExecutionSettings(){
+        return PromptExecutionSettings.builder()
+                .withTemperature(0.8)
+                .build();
     }
+
 }
